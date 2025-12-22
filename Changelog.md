@@ -223,3 +223,5 @@ Since v2.5:
 - Added VCIT asset types: `templates` and `assetgen_presets`.
 - Added module option `assetGen`.
 - Added command `/variants-cit assetgen`.
+## 3.15
+- Added module `component_threshold`
