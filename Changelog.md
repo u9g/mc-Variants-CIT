@@ -224,4 +224,5 @@ Since v2.5:
 - Added module option `assetGen`.
 - Added command `/variants-cit assetgen`.
 ## 3.15
+- Fixed a crash when certain modules try to access null components.
 - Added module `component_threshold`
