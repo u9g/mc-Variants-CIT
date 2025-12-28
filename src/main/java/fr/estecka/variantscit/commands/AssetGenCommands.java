@@ -24,6 +24,9 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.concurrent.CompletableFuture;
+
+import org.apache.commons.io.FileUtils;
+
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument;
 import static com.mojang.brigadier.arguments.BoolArgumentType.bool;
@@ -109,24 +112,20 @@ public class AssetGenCommands
 			if (!pack.isDirectory())
 				return Error(context, "File \""+BAKED_PACK_DIR+"\" already exists but is not a directory.");
 			else {
-				boolean deleted = false;
-				context.getSource().sendFeedback(Text.literal("Deleting existing baked pack..."));
+				context.getSource().sendFeedback(Text.literal("Deleting existing pack..."));
 				try {
-					deleted = pack.delete();
+					FileUtils.deleteDirectory(pack);
 				}
-				catch (SecurityException e){
-					VariantsCitMod.LOGGER.error("Unabled to delete baked assetgen pack:\n{}", e);
-					return Error(context, "Unable to delete baked assetgen pack.");
+				catch (IOException e){
+					VariantsCitMod.LOGGER.error("Unable to delete existing baked assetgen pack:\n{}", e);
+					return Error(context, "Unable to delete existing baked assetgen pack.");
 				}
-
-				if (!deleted)
-					return Error(context, "Unable to delete baked assetgen pack.");
 			}
 		}
 
 		// Init
 		try {
-			CopyRecursive(base.toPath(), pack.toPath());
+			FileUtils.copyDirectory(base, pack);
 		}
 		catch (IOException e){
 			VariantsCitMod.LOGGER.error("Unable to initialize baked pack:\n{}", e);
@@ -156,23 +155,6 @@ public class AssetGenCommands
 
 		context.getSource().sendFeedback(Text.literal("Done !"));
 		return 1;
-	}
-
-	static private void CopyRecursive(Path src, Path dst)
-	throws IOException
-	{
-		Files.walkFileTree(src, new SimpleFileVisitor<Path>(){
-			@Override
-			public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-				Files.createDirectories(dst.resolve(src.relativize(dir)));
-				return FileVisitResult.CONTINUE;
-			};
-			@Override
-			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-				Files.copy(file, dst.resolve(src.relativize(file)), StandardCopyOption.REPLACE_EXISTING);
-				return FileVisitResult.CONTINUE;
-			};
-		} );
 	}
 
 }
