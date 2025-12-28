@@ -227,3 +227,6 @@ Since v2.5:
 - Added the `radicalPath` option to asset generators.
 - Added the `RADICAL` variables to template.
 - Modules will now be looked for in `modules/` in addition to the old directories.
+## 3.16-indev
+- Added command: `/variants-cit assetgen createPack`
+- Renamed existing commands.
