@@ -11,22 +11,20 @@ import fr.estecka.variantscit.assetgen.GeneratedResourcePack;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.command.CommandSource;
+import net.minecraft.resource.ResourcePackManager;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
-
 import org.apache.commons.io.FileUtils;
-
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument;
 import static com.mojang.brigadier.arguments.BoolArgumentType.bool;
@@ -154,6 +152,18 @@ public class AssetGenCommands
 			return Error(context, "Error while writing some assets. See log for details.");
 
 		context.getSource().sendFeedback(Text.literal("Done !"));
+
+		// Reload
+		ResourcePackManager packManager = MinecraftClient.getInstance().getResourcePackManager();
+		String packId = "file/"+BAKED_PACK_DIR;
+		List<String> enabled = new ArrayList<>(packManager.getEnabledIds());
+		if (!packManager.getEnabledIds().contains(packId)){
+			enabled.addFirst(packId);
+			packManager.scanPacks();
+			packManager.setEnabledProfiles(enabled);
+		}
+
+		MinecraftClient.getInstance().reloadResources();
 		return 1;
 	}
 
