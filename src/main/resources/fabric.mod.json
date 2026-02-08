@@ -18,7 +18,8 @@
 	"entrypoints": {
 		"client": [
 			"fr.estecka.variantscit.VariantsCitMod"
-		]
+		],
+		"variants-cit": []
 	},
 	"mixins": [
 		{ "environment": "client", "config": "variants-cit.mixins.json" }

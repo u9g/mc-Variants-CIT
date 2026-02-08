@@ -17,4 +17,31 @@ public final class ModuleRegistrar
 	static public void Register(Identifier moduleId, ICitModule module){
 		VCitRegistries.RegisterSimpleModule(moduleId, module);
 	}
+
+	/**
+	 * Registers a module type with a codec for parameterized deserialization.
+	 * @param moduleId The unique identifier for this module type.
+	 * @param moduleCodec The codec used to deserialize module parameters from JSON.
+	 */
+	public void register(Identifier moduleId, MapCodec<? extends ICitModule> moduleCodec){
+		Register(moduleId, moduleCodec);
+	}
+
+	/**
+	 * Registers a simple module instance (no parameters needed).
+	 * @param moduleId The unique identifier for this module type.
+	 * @param module The module instance implementing variant identification.
+	 */
+	public void register(Identifier moduleId, ISimpleCitModule module){
+		Register(moduleId, module);
+	}
+
+	/**
+	 * Registers a module instance (no parameters needed).
+	 * @param moduleId The unique identifier for this module type.
+	 * @param module The module instance implementing model resolution.
+	 */
+	public void register(Identifier moduleId, ICitModule module){
+		Register(moduleId, module);
+	}
 }
