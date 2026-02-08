@@ -1,6 +1,7 @@
 package fr.estecka.variantscit;
 
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.render.item.model.ItemModelTypes;
 import net.minecraft.client.render.item.property.numeric.NumericProperties;
 import net.minecraft.component.DataComponentTypes;
@@ -8,6 +9,8 @@ import net.minecraft.item.Item;
 import net.minecraft.util.Identifier;
 import java.util.Map;
 import org.jetbrains.annotations.Nullable;
+import fr.estecka.variantscit.api.ModuleRegistrar;
+import fr.estecka.variantscit.api.VariantsCitApiEntrypoint;
 import fr.estecka.variantscit.reload.EModuleContext;
 import fr.estecka.variantscit.reload.ModuleLoader;
 import fr.estecka.variantscit.reload.MetaModule;
@@ -66,6 +69,15 @@ implements ClientModInitializer
 
 		ModuleCommands.Register();
 		AssetGenCommands.Register();
+
+		ModuleRegistrar registrar = new ModuleRegistrar();
+		for (VariantsCitApiEntrypoint entrypoint : FabricLoader.getInstance().getEntrypoints("variants-cit", VariantsCitApiEntrypoint.class)) {
+			try {
+				entrypoint.onInitializeVariantsCit(registrar);
+			} catch (Exception e) {
+				LOGGER.error("Failed to initialize Variants-CIT entrypoint: {}", entrypoint.getClass().getName(), e);
+			}
+		}
 	}
 
 	static public void OnResourceReload(ModuleLoader.Result result){
