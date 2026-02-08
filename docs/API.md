@@ -32,7 +32,7 @@ dependencies {
 }
 ```
 
-Replace `<version>` with the desired version (e.g., `4.11.1+1.21.9`).
+Replace `<version>` with the desired version (e.g., `4.12.0+1.21.9`).
 
 > **Tip:** To publish Variants-CIT to your local Maven for development, clone the Variants-CIT repository and run `./gradlew publishToMavenLocal`.
 
