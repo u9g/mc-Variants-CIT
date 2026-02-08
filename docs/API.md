@@ -85,9 +85,9 @@ public class MyModClient implements ClientModInitializer {
             if (stack.isOf(Items.DIAMOND_SWORD)) {
                 int kills = getKillCount(stack); // your custom logic
                 if (kills >= 100) {
-                    return Identifier.of("mymod", "item/diamond_sword_legendary");
+                    return Identifier.of("mymod", "diamond_sword_legendary");
                 } else if (kills >= 10) {
-                    return Identifier.of("mymod", "item/diamond_sword_veteran");
+                    return Identifier.of("mymod", "diamond_sword_veteran");
                 }
             }
             return null; // defer to Variants-CIT modules or vanilla
@@ -96,7 +96,37 @@ public class MyModClient implements ClientModInitializer {
 }
 ```
 
-The returned `Identifier` should point to a valid item model registered in your mod's assets (e.g., `assets/mymod/models/item/diamond_sword_legendary.json`).
+The returned `Identifier` must point to an **item model definition** that Minecraft has loaded. This is an `items/` file, **not** a `models/item/` file. Specifically, you need:
+
+```
+assets/mymod/items/diamond_sword_legendary.json
+```
+
+This item model definition file tells Minecraft how to render the item. For example, a simple model reference:
+
+```json
+{
+    "model": {
+        "type": "minecraft:model",
+        "model": "mymod:item/diamond_sword_legendary"
+    }
+}
+```
+
+And the actual model file at `assets/mymod/models/item/diamond_sword_legendary.json`:
+
+```json
+{
+    "parent": "minecraft:item/handheld",
+    "textures": {
+        "layer0": "mymod:item/diamond_sword_legendary"
+    }
+}
+```
+
+With your texture at `assets/mymod/textures/item/diamond_sword_legendary.png`.
+
+> **Common mistake:** Using `Identifier.of("mymod", "item/diamond_sword_legendary")` — note the path should be just `"diamond_sword_legendary"`, not `"item/diamond_sword_legendary"`. The identifier maps to `assets/mymod/items/<path>.json`, so including `item/` in the path would look for `assets/mymod/items/item/diamond_sword_legendary.json`.
 
 ### ModuleRegistrar — Custom CIT Module Types
 
@@ -145,6 +175,101 @@ This lets resource pack authors use your module type:
    ./gradlew publishToMavenLocal
    ```
    This makes the mod available at `mavenLocal()` in other Gradle projects.
+
+## Troubleshooting
+
+### My modded item model isn't showing up / falls back to missing texture
+
+The most common issue when using `ItemModelCallback` with a custom namespace (e.g., `Identifier.of("mymod", "my_sword")`) is that Minecraft hasn't loaded the model. The identifier you return must correspond to an **item model definition** file that Minecraft discovers during resource loading.
+
+**Checklist:**
+
+1. **Item model definition file exists** — You need a file at `assets/<namespace>/items/<path>.json`.
+   For `Identifier.of("mymod", "diamond_sword_legendary")`, the file must be at:
+   ```
+   assets/mymod/items/diamond_sword_legendary.json
+   ```
+
+2. **The path is correct** — A common mistake is returning `Identifier.of("mymod", "item/diamond_sword_legendary")` which would look for `assets/mymod/items/item/diamond_sword_legendary.json` (note the extra `item/` segment). The path in the identifier maps directly to `assets/<namespace>/items/<path>.json`.
+
+3. **The item model definition references a valid model** — Your `items/*.json` file must point to an actual model:
+   ```json
+   {
+       "model": {
+           "type": "minecraft:model",
+           "model": "mymod:item/diamond_sword_legendary"
+       }
+   }
+   ```
+
+4. **The referenced model JSON exists** — At `assets/mymod/models/item/diamond_sword_legendary.json`.
+
+5. **The texture exists** — At `assets/mymod/textures/item/diamond_sword_legendary.png`.
+
+6. **Your mod's resources are in the correct directory** — In a Fabric mod, resources go in `src/main/resources/assets/<your_mod_id>/`.
+
+### Why does it work with vanilla identifiers but not my own?
+
+Vanilla item models (e.g., `Identifier.of("minecraft", "iron_sword")`) work because Minecraft always loads its own item model definitions during startup. Your mod's item model definitions are only loaded if they exist in a resource pack that Minecraft knows about — which for a Fabric mod means they must be in `src/main/resources/assets/`.
+
+### Example file structure for a working custom model
+
+```
+src/main/resources/
+└── assets/
+    └── mymod/
+        ├── items/
+        │   └── diamond_sword_legendary.json    ← item model definition
+        ├── models/
+        │   └── item/
+        │       └── diamond_sword_legendary.json ← the actual model
+        └── textures/
+            └── item/
+                └── diamond_sword_legendary.png  ← the texture
+```
+
+## Debugging
+
+Variants-CIT logs callback results at `TRACE` level. To see these messages, set the logging level for `variants-cit` to `TRACE` in your logging configuration.
+
+### Enabling TRACE logging (Log4j)
+
+Add the following to your `log4j2.xml` (or create one in your run directory):
+
+```xml
+<Configuration>
+    <Loggers>
+        <Logger name="variants-cit" level="TRACE"/>
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+        </Root>
+    </Loggers>
+</Configuration>
+```
+
+Or add a system property to your Fabric run configuration (in `build.gradle`):
+
+```groovy
+loom {
+    runs {
+        client {
+            property "log4j.configurationFile", "log4j2-debug.xml"
+        }
+    }
+}
+```
+
+### What to look for in the logs
+
+When TRACE logging is enabled, you will see messages like:
+
+```
+[TRACE] [variants-cit] ItemModelCallback resolved model for diamond_sword: mymod:diamond_sword_legendary
+```
+
+If you see the correct identifier being returned but the model still doesn't show up, the issue is that the item model definition file is missing or in the wrong location. Double-check the file structure in the [Troubleshooting](#troubleshooting) section above.
+
+If you don't see any log output for your item, your callback may not be matching the item. Add temporary logging inside your callback to verify it is being invoked.
 
 ## API Reference
 

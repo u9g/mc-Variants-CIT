@@ -24,7 +24,10 @@ public class ItemModelManagerMixin
 	{
 		Identifier modelId = ItemModelCallback.EVENT.invoker().resolveModel(stack);
 
-		if (modelId == null) {
+		if (modelId != null) {
+			VariantsCitMod.LOGGER.trace("ItemModelCallback resolved model for {}: {}", stack.getItem(), modelId);
+		}
+		else {
 			final IBakedModule module = VariantsCitMod.GetItemModule(stack.getItem());
 
 			if (module != null){
